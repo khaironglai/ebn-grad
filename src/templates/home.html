@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surveillance Feed</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Real-time Processing</h1>
+    </header>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/upload_picture">Upload Picture</a>
+        <a href="/upload_video">Upload Video</a>
+        <a href="/contact_us">Contact Us</a>
+    </nav>
+
+    <!-- Main container with separated sections for video, info, and price -->
+    <div class="container">
+        <!-- Video Container -->
+        <div class="video-container">
+            <h2>Surveillance Camera</h2>
+            <form action="/set_model" method="post"> 
+                <label for="model-select">Choose a model:</label>
+                <select id="model-select" name="model">
+                    <option value="yolov8">YOLOv8</option>
+                    <option value="yolov9">YOLOv9</option>
+                    <option value="yolov10" selected>YOLOv10</option>
+                </select>
+                <label for="model-path">Model Path (optional):</label>
+                <input type="text" id="model-path" name="model_path" placeholder="Enter model path">
+                <button type="submit">Start Detection</button>
+            </form>
+            
+            <img src="/video_feed" width="640" height="360" alt="Video Feed">
+        </div>
+        
+        <!-- Info and Price Wrapper for vertical stacking of both containers -->
+        <div class="info-price-wrapper">
+            <!-- Info Container -->
+            <div class="info-container">
+                <h2 id="result-title">Result: </h2>
+                <div class="result" id="grade-a">
+                    <strong>Grade A:</strong>
+                    <span id="confidence-a">Possibility with 0%</span>
+                </div>
+                <div class="result" id="grade-b">
+                    <strong>Grade B:</strong>
+                    <span id="confidence-b">Possibility with 0%</span>
+                </div>
+                <div class="result" id="grade-c">
+                    <strong>Grade C:</strong>
+                    <span id="confidence-c">Possibility with 0%</span>
+                </div>
+                <h2>Description:</h2>
+                <p id="description">No birdnest detected.</p>
+                <h2>Accumulated Edible Birdnests:</h2>
+                <p id="accumulated-a">Grade A: 0</p>
+                <p id="accumulated-b">Grade B: 0</p>
+                <p id="accumulated-c">Grade C: 0</p>
+
+                <h2>Calculated Edible Bird Nests Price:</h2>
+                <p>Grade A: RM <span id="price-a">0</span> (RM100 per unit)</p>
+                <p>Grade B: RM <span id="price-b">0</span> (RM50 per unit)</p>
+                <p>Grade C: RM <span id="price-c">0</span> (RM10 per unit)</p>
+                <h2>Estimated Edible Bird Nests Price:</h2>
+                <p>RM <span id="final-price">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Gallery Section -->
+    <div class="image-gallery">
+        <h2>Captured Images</h2>
+        <div id="captured-images-container" class="image-row"></div>
+    </div>
+
+    <script>
+        const pricePerUnit = {
+            'Grade A Birdnest': 100, // RM100 per unit
+            'Grade B Birdnest': 50,  // RM50 per unit
+            'Grade C Birdnest': 10   // RM10 per unit
+        };
+
+        async function fetchDescription() {
+            try {
+                const response = await fetch('/description');
+                const data = await response.json();
+
+                document.getElementById('result-title').textContent = `Result: ${data.grade}`;
+                document.getElementById('description').textContent = data.description;
+
+                const confidence = Math.round(data.confidence * 100);
+                const remainingConfidence = 100 - confidence;
+                const otherConfidences = [0, 0];
+
+                if (remainingConfidence > 0) {
+                    const randomShare = Math.floor(Math.random() * remainingConfidence);
+                    otherConfidences[0] = randomShare;
+                    otherConfidences[1] = remainingConfidence - randomShare;
+                }
+
+                const confidenceMap = {
+                    'Grade A Birdnest': [confidence, ...otherConfidences],
+                    'Grade B Birdnest': [otherConfidences[0], confidence, otherConfidences[1]],
+                    'Grade C Birdnest': [otherConfidences[1], otherConfidences[0], confidence],
+                };
+
+                if (confidenceMap[data.grade]) {
+                    document.getElementById('confidence-a').textContent = `Possibility with ${confidenceMap[data.grade][0]}%`;
+                    document.getElementById('confidence-b').textContent = `Possibility with ${confidenceMap[data.grade][1]}%`;
+                    document.getElementById('confidence-c').textContent = `Possibility with ${confidenceMap[data.grade][2]}%`;
+                }
+
+                document.getElementById('accumulated-a').textContent = `Grade A: ${data.accumulatedCounts['Grade A Birdnest']}`;
+                document.getElementById('accumulated-b').textContent = `Grade B: ${data.accumulatedCounts['Grade B Birdnest']}`;
+                document.getElementById('accumulated-c').textContent = `Grade C: ${data.accumulatedCounts['Grade C Birdnest']}`;
+
+                // Calculate prices
+                const gradeACount = data.accumulatedCounts['Grade A Birdnest'];
+                const gradeBCount = data.accumulatedCounts['Grade B Birdnest'];
+                const gradeCCount = data.accumulatedCounts['Grade C Birdnest'];
+
+                const gradeAPrice = gradeACount * pricePerUnit['Grade A Birdnest'];
+                const gradeBPrice = gradeBCount * pricePerUnit['Grade B Birdnest'];
+                const gradeCPrice = gradeCCount * pricePerUnit['Grade C Birdnest'];
+                const finalPrice = gradeAPrice + gradeBPrice + gradeCPrice;
+
+                document.getElementById('price-a').textContent = gradeAPrice;
+                document.getElementById('price-b').textContent = gradeBPrice;
+                document.getElementById('price-c').textContent = gradeCPrice;
+                document.getElementById('final-price').textContent = finalPrice;
+            } catch (error) {
+                console.error('Error fetching description:', error);
+            }
+        }
+
+        async function fetchCapturedImages() {
+            try {
+                const response = await fetch('/captured_images');
+                const images = await response.json();
+                const container = document.getElementById('captured-images-container');
+                container.innerHTML = ''; // Clear the container
+
+                images.forEach(image => {
+                    const img = document.createElement('img');
+                    img.src = `/static/captured_images/${image}`;
+                    img.alt = "Captured Birdnest Image";
+                    img.style.width = '200px'; // Adjust as needed
+                    img.style.margin = '10px'; // Adjust as needed
+                    container.appendChild(img);
+                });
+            } catch (error) {
+                console.error('Error fetching captured images:', error);
+            }
+        }
+
+        // Fetch description every second
+        setInterval(fetchDescription, 1000);
+
+        // Fetch captured images every 5 seconds
+        setInterval(fetchCapturedImages, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Upload Video</h1>
+    </header>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/upload_picture">Upload Picture</a>
+        <a href="/upload_video">Upload Video</a>
+        <a href="/contact_us">Contact Us</a>
+    </nav>
+    <div class="container">
+        <div class="upload-container">
+            <h2>Select a Video to Upload</h2>
+            <form id="upload-form" action="/process_video" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept="video/*" required>
+                <br>
+                <button type="submit">Upload and Process</button>
+            </form>
+            <div id="progress-container" class="progress-container" style="display:none;">
+                <p>Uploading...</p>
+                <progress id="progress-bar" value="0" max="100"></progress>
+            </div>
+            <div id="processing-container" style="display:none;">
+                <p>Processing video, please wait...</p>
+            </div>
+            <div id="result-container" class="result-container"></div>
+        </div>
+    </div>
+    <script>
+        const form = document.getElementById('upload-form');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const processingContainer = document.getElementById('processing-container');
+        const resultContainer = document.getElementById('result-container');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            progressContainer.style.display = 'block';
+            progressBar.value = 0;
+            resultContainer.innerHTML = '';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/process_video', true);
+
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.value = percentComplete;
+                }
+            });
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == XMLHttpRequest.DONE) {
+                    progressContainer.style.display = 'none';
+                    if (xhr.status == 200) {
+                        processingContainer.style.display = 'block';
+                        const response = JSON.parse(xhr.responseText);
+                        checkProcessingStatus(response.task_id);
+                    } else {
+                        resultContainer.innerHTML = 'An error occurred during upload.';
+                    }
+                }
+            };
+
+            xhr.send(formData);
+        });
+
+        function checkProcessingStatus(taskId) {
+            fetch(`/video_status/${taskId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'Processing') {
+                        setTimeout(() => checkProcessingStatus(taskId), 1000);
+                    } else if (data.status === 'Completed') {
+                        processingContainer.style.display = 'none';
+                        resultContainer.innerHTML = data.result_html;
+                    } else {
+                        processingContainer.style.display = 'none';
+                        resultContainer.innerHTML = 'An error occurred during processing.';
+                    }
+                });
+        }
+    </script>
+</body>
+</html>

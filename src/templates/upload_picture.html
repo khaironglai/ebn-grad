@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Picture</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Upload Picture</h1>
+    </header>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/upload_picture">Upload Picture</a>
+        <a href="/upload_video">Upload Video</a>
+        <a href="/contact_us">Contact Us</a>
+    </nav>
+    <div class="container">
+        <div class="upload-container">
+            <h2>Select a Picture to Upload</h2>
+            <form id="upload-form" action="/process_picture" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept="image/*" required>
+                <br>
+                <button type="submit">Upload and Process</button>
+            </form>
+            <div id="progress-container" class="progress-container" style="display:none;">
+                <p>Processing...</p>
+                <progress id="progress-bar" value="0" max="100"></progress>
+            </div>
+            <div id="result-container" class="result-container"></div>
+        </div>
+    </div>
+    <script>
+        const form = document.getElementById('upload-form');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const resultContainer = document.getElementById('result-container');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            progressContainer.style.display = 'block';
+            progressBar.value = 0;
+            resultContainer.innerHTML = '';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/process_picture', true);
+
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.value = percentComplete;
+                }
+            });
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == XMLHttpRequest.DONE) {
+                    progressContainer.style.display = 'none';
+                    if (xhr.status == 200) {
+                        // Display the result
+                        resultContainer.innerHTML = xhr.responseText;
+                    } else {
+                        resultContainer.innerHTML = 'An error occurred during processing.';
+                    }
+                }
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>

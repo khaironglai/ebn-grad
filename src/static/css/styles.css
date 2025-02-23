@@ -1,0 +1,130 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #1c1c1c;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    background-color: #1c1c1c;
+    padding: 10px;
+}
+
+nav a {
+    color: #ffffff;
+    margin: 0 15px;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between; /* Adjust space between the containers */
+    align-items: flex-start;
+    padding: 20px;
+    gap: 20px; /* Add space between the containers */
+}
+
+.video-container {
+    background-color: #2e2e2e;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.info-price-wrapper {
+    flex: 1; /* This adjusts the size of the combined info and price section */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Adds space between the info and price containers */
+}
+
+.info-container, .price-container {
+    background-color: #2e2e2e !important; /* Ensure this is the correct grey color */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+}
+
+.info-container h2, .price-container h2 {
+    margin-top: 0;
+}
+
+.result {
+    margin-bottom: 10px;
+}
+
+.result span {
+    display: block;
+    background-color: #007bff;
+    padding: 5px;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+img, video {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.image-gallery {
+    padding: 20px;
+    background-color: #1c1c1c;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    margin-top: 20px;
+}
+
+.image-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.image-row img {
+    width: 150px;
+    height: auto;
+    margin: 5px;
+}
+
+.progress-container, .processing-container, .result-container {
+    margin-top: 20px;
+}
+
+.price-container h2 {
+    color: #ffffff; /* Adjusted color to match dark theme */
+}
+
+.price-container p {
+    font-size: 1.1em;
+    color: #bbbbbb; /* Lighter text for better readability */
+}
+
+.price-container span {
+    font-weight: bold;
+    color: #ffffff;
+}
